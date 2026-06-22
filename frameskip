@@ -1,0 +1,38 @@
+local TargetFPS = 6 -- CHANGE THIS: Lower = Choppier (8-12), Higher = Smoother (24+)
+
+local Players = game:GetService("Players")
+local Client = Players.LocalPlayer
+local Character = Client.Character or Client.CharacterAdded:Wait()
+
+while true do
+    -- Wait for the duration of one "frame" based on your TargetFPS
+    local Delta = task.wait(1 / TargetFPS)
+
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid") or Character:FindFirstChildOfClass("AnimationController")
+    
+    if Humanoid then
+        local Animator = Humanoid:FindFirstChildOfClass("Animator")
+        if Animator then
+            for _, Track in ipairs(Animator:GetPlayingAnimationTracks()) do
+                -- 1. Set Speed to 0 to disable Roblox's smooth tweening
+                Track:AdjustSpeed(0)
+                
+                -- 2. Manually step the time forward
+                if Track.Length > 0 then
+                    local NewTime = Track.TimePosition + Delta
+                    
+                    -- Handle looping manually since we disabled the native speed
+                    if NewTime >= Track.Length then
+                        if Track.Looped then
+                            NewTime = 0
+                        else
+                            NewTime = Track.Length -- Stick to end
+                        end
+                    end
+                    
+                    Track.TimePosition = NewTime
+                end
+            end
+        end
+    end
+end
